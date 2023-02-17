@@ -47,9 +47,11 @@ app.get("/urls", (req, res) => {
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
   console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  urlDatabase[req.body] = req.body.longURL;
+  res.redirect('/urls/$(req.body.id)');
 });
 
+// A route to create new urls
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
