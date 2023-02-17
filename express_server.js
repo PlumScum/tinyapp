@@ -62,6 +62,6 @@ app.get("/urls/:id", (req, res) => {
 
 // Redirect any requests to a URL id to its longURL
 app.get("/u/:id", (req, res) => {
-  // const longURL = ...
+  const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
