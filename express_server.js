@@ -6,6 +6,9 @@ const PORT = 8080; // default port 8080
 // Set our render engine
 app.set("view engine", "ejs");
 
+// Convert our requests into a readable string
+app.use(express.urlencoded({ extended: true }));
+
 // Declare our ids with urls
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
