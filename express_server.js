@@ -3,6 +3,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+function generateRandomString() {}
+
 // Set our render engine
 app.set("view engine", "ejs");
 
@@ -42,6 +44,11 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// Accept post data on our urls endpoint
+app.post("/urls", (req, res) => {
+  console.log(req.body); // Log the POST request body to the console
+  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+});
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -51,4 +58,10 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
+});
+
+// Redirect any requests to a URL id to its longURL
+app.get("/u/:id", (req, res) => {
+  // const longURL = ...
+  res.redirect(longURL);
 });
