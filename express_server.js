@@ -56,7 +56,6 @@ app.get("/urls", (req, res) => {
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
-  console.log(req.body); // Log the POST request body to the console
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
@@ -70,6 +69,13 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   res.render("urls_show", templateVars);
+});
+
+// Delete url from urlDatabase
+app.post("/urls/:id/delete", (req, res) => {
+  // Since we are not sending post data, we are using the req.param.id to get its id
+  delete urlDatabase[req.params.id];
+  res.redirect('/urls');
 });
 
 // Redirect any requests to a URL id to its longURL
