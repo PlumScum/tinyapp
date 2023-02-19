@@ -71,11 +71,17 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+// Update longURL in urlDatabase
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.newURL;
+  res.redirect("/urls");
+});
+
 // Delete url from urlDatabase
 app.post("/urls/:id/delete", (req, res) => {
   // Since we are not sending post data, we are using the req.param.id to get its id
   delete urlDatabase[req.params.id];
-  res.redirect('/urls');
+  res.redirect("/urls");
 });
 
 // Redirect any requests to a URL id to its longURL
