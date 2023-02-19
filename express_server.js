@@ -3,7 +3,16 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
+function generateRandomString(len) {
   let text = "";
+  
+  let charset = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ0123456789";
+  
+  for (let i = 0; i < len; i++)
+    text += charset.charAt(Math.floor(Math.random() * charset.length));
+  
+  return text;
+}
 
 // Set our render engine
 app.set("view engine", "ejs");
@@ -46,9 +55,10 @@ app.get("/urls", (req, res) => {
 
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString(6);
   console.log(req.body); // Log the POST request body to the console
-  urlDatabase[req.body] = req.body.longURL;
-  res.redirect('/urls/$(req.body.id)');
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
 // A route to create new urls
