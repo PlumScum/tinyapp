@@ -45,10 +45,19 @@ const users = {
   },
 };
 
+function getUserByEmail(email) {
+  for (usr in users) {
+    if (email == users[usr].email) {
+      return users[usr];
+    }
+  }
+  return false;
+}
 
 // Visiting our web server's / will greet with hello
 app.get("/", (req, res) => {
   res.send("Hello!");
+  console.log(getUserByEmail("user@example.com"));
 });
 
 // Log our port to console
