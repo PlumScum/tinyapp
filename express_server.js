@@ -74,7 +74,10 @@ app.post("/urls", (req, res) => {
 
 // A route to create new urls
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render("urls_new", templateVars);
 });
 
 // Visiting urls with urls/id returns it's longurl and renders it from our urls_show.ejs template
@@ -109,5 +112,11 @@ app.get("/u/:id", (req, res) => {
 // Endpoint for logging in. Also sets a cookie for username
 app.post("/login", (req, res) => {
   res.cookie('username', req.body.username);
+  res.redirect('/urls');
+});
+
+// Endpoint for logging out.
+app.post("/logout", (req, res) => {
+  res.clearCookie('username');
   res.redirect('/urls');
 });
