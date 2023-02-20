@@ -1,3 +1,5 @@
+var cookieParser = require('cookie-parser');
+
 // Initiate our express server
 const express = require("express");
 const app = express();
@@ -19,6 +21,9 @@ app.set("view engine", "ejs");
 
 // Convert our requests into a readable string
 app.use(express.urlencoded({ extended: true }));
+
+// Cookie Parser
+app.use(cookieParser());
 
 // Declare our ids with urls
 const urlDatabase = {
@@ -43,13 +48,20 @@ app.get("/urls.json", (req, res) => {
 
 // We use ejs to render our hello_world.ejs template and greet the viewer
 app.get("/hello", (req, res) => {
-  const templateVars = { greeting: "Hello World!" };
+  const templateVars = {
+    greeting: "Hello World!",
+    username: req.cookies["username"]
+  };
   res.render("hello_world", templateVars);
 });
 
 // Displays a table of our ids and urls using our urls_index.ejs template
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+
+  const templateVars = {
+    'username': req.cookies["username"],
+    urls: urlDatabase
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -67,7 +79,11 @@ app.get("/urls/new", (req, res) => {
 
 // Visiting urls with urls/id returns it's longurl and renders it from our urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"]
+  };
   res.render("urls_show", templateVars);
 });
 
