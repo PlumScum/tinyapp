@@ -101,7 +101,6 @@ app.get("/urls/:id", (req, res) => {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
     user: users[req.cookies["user_id"]]
-    };
   };
   res.render("urls_show", templateVars);
 });
@@ -125,7 +124,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-// Endpoint for logging in. Also sets a cookie for username
+// Endpoint for logging in. Also sets a cookie for user_id
 app.post("/login", (req, res) => {
   res.cookie('user_id', req.body.email);
   res.redirect('/urls');
