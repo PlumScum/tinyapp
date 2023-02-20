@@ -65,7 +65,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   const templateVars = {
     greeting: "Hello World!",
-    user: req.cookies["user_id"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("hello_world", templateVars);
 });
@@ -74,7 +74,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
 
   const templateVars = {
-    user: req.cookies["user_id"],
+    user: users[req.cookies["user_id"]],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
