@@ -120,3 +120,12 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
 });
+
+// Endpoint for logging out.
+app.get("/register", (req, res) => {
+  const templateVars = {
+    greeting: "Hello World!",
+    username: req.cookies["username"]
+  };
+  res.render("user_registration", templateVars);
+});
