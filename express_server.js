@@ -31,6 +31,21 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// Our users object
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
+
 // Visiting our web server's / will greet with hello
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -50,7 +65,7 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   const templateVars = {
     greeting: "Hello World!",
-    username: req.cookies["username"]
+    user: req.cookies["user_id"]
   };
   res.render("hello_world", templateVars);
 });
@@ -59,7 +74,7 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
 
   const templateVars = {
-    'username': req.cookies["username"],
+    user: req.cookies["user_id"],
     urls: urlDatabase
   };
   res.render("urls_index", templateVars);
@@ -75,7 +90,7 @@ app.post("/urls", (req, res) => {
 // A route to create new urls
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_new", templateVars);
 });
@@ -85,7 +100,8 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
+    };
   };
   res.render("urls_show", templateVars);
 });
@@ -111,21 +127,35 @@ app.get("/u/:id", (req, res) => {
 
 // Endpoint for logging in. Also sets a cookie for username
 app.post("/login", (req, res) => {
-  res.cookie('username', req.body.username);
+  res.cookie('user_id', req.body.email);
   res.redirect('/urls');
 });
 
 // Endpoint for logging out.
 app.post("/logout", (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
 
-// Endpoint for logging out.
+// Endpoint for registration.
 app.get("/register", (req, res) => {
   const templateVars = {
-    greeting: "Hello World!",
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
+  res.render("user_registration", templateVars);
+});
+
+// Endpoint registers and logs a user in.
+app.post("/register", (req, res) => {
+  const userId = generateRandomString(12);
+  users[userId] = {
+    id: userId,
+    email: req.body.email,
+    password: req.body.password
+  };
+  const templateVars = {
+    user: users[userId]
+  };
+  res.cookie('user_id', userId);
   res.render("user_registration", templateVars);
 });
