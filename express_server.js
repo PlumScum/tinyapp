@@ -147,23 +147,32 @@ app.post("/logout", (req, res) => {
 
 // Endpoint for registration.
 app.get("/register", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("user_registration", templateVars);
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls');
+  } else {
+    const templateVars = {
+      user: users[req.cookies["user_id"]]
+    };
+    res.render("user_registration", templateVars);
+  }
 });
 
 // Endpoint registers and logs a user in.
 app.post("/register", (req, res) => {
-  const userId = generateRandomString(12);
-  users[userId] = {
-    id: userId,
-    email: req.body.email,
-    password: req.body.password
-  };
-  const templateVars = {
-    user: users[userId]
-  };
-  res.cookie('user_id', userId);
-  res.render("user_registration", templateVars);
+  if (req.body.email === "" || req.body.password === "" || getUserByEmail(req.body.email)) {
+    res.status(400).send("400 error ! Email or password empty.");
+  } else {
+    const userId = generateRandomString(12);
+    users[userId] = {
+      id: userId,
+      email: req.body.email,
+      password: req.body.password
+    };
+    const templateVars = {
+      user: users[userId]
+    };
+    res.cookie('user_id', userId);
+    res.redirect("/urls");
+  }
+
 });
