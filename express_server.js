@@ -225,7 +225,7 @@ app.post("/login", (req, res) => {
       res.status(400).send("400 error ! Error finding user");
     } else {
       const userObject = users[getUserByEmail(req.body.email)];
-      if (userEmail === userObject.email && userPassword === userObject.password) {
+      if (userEmail === userObject.email && bcrypt.compareSync(userPassword, userObject.password)) {
         res.cookie('user_id', userObject.id);
         res.redirect('/urls');
       }
@@ -263,7 +263,7 @@ app.post("/register", (req, res) => {
       users[userId] = {
         id: userId,
         email: req.body.email,
-        password: req.body.password
+        password: bcrypt.hashSync(req.body.password, 10)
       };
       res.cookie('user_id', userId);
       res.redirect("/urls");
