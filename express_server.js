@@ -133,16 +133,38 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+// Endpoint for logging in.
+app.get("/login", (req, res) => {
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls');
+  } else {
+    const templateVars = {
+      user: users[req.cookies["user_id"]]
+    };
+    res.render("user_login", templateVars);
+  }
+});
+
 // Endpoint for logging in. Also sets a cookie for user_id
 app.post("/login", (req, res) => {
-  res.cookie('user_id', req.body.email);
-  res.redirect('/urls');
+  console.log(getUserByEmail(req.body.email));
+  // Are any of our login credentials empty?
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send("400 error ! Email or password empty.");
+  } else if (!getUserByEmail(req.body.email)) { // Does the user exist?
+    res.status(400).send("400 error ! Error finding user");
+  } else {
+    if (getUserByEmail(req.body.email).email === req.body.email && getUserByEmail(req.body.email).password === req.body.password) {
+      res.cookie('user_id', getUserByEmail(req.body.email));
+      res.redirect('/urls');
+    }
+  }
 });
 
 // Endpoint for logging out.
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id');
-  res.redirect('/urls');
+  res.redirect('/login');
 });
 
 // Endpoint for registration.
@@ -160,7 +182,7 @@ app.get("/register", (req, res) => {
 // Endpoint registers and logs a user in.
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "" || getUserByEmail(req.body.email)) {
-    res.status(400).send("400 error ! Email or password empty.");
+    res.status(403).send("403 error ! Email or password empty.");
   } else {
     const userId = generateRandomString(12);
     users[userId] = {
