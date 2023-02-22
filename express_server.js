@@ -48,7 +48,7 @@ const users = {
 function getUserByEmail(email) {
   for (usr in users) {
     if (email == users[usr].email) {
-      return users[usr];
+      return usr;
     }
   }
   return false;
@@ -147,17 +147,21 @@ app.get("/login", (req, res) => {
 
 // Endpoint for logging in. Also sets a cookie for user_id
 app.post("/login", (req, res) => {
-  console.log(getUserByEmail(req.body.email));
   // Are any of our login credentials empty?
-  if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send("400 error ! Email or password empty.");
-  } else if (!getUserByEmail(req.body.email)) { // Does the user exist?
-    res.status(400).send("400 error ! Error finding user");
-  } else {
-    if (getUserByEmail(req.body.email).email === req.body.email && getUserByEmail(req.body.email).password === req.body.password) {
-      res.cookie('user_id', getUserByEmail(req.body.email));
-      res.redirect('/urls');
+  if (req.body.email || req.body.password) {
+    const userEmail = req.body.email;
+    const userPassword = req.body.password;
+    if (!getUserByEmail(req.body.email)) {
+      res.status(400).send("400 error ! Error finding user");
+    } else {
+      const userObject = users[getUserByEmail(req.body.email)];
+      if (userEmail === userObject.email && userPassword === userObject.password) {
+        res.cookie('user_id', userObject.id);
+        res.redirect('/urls');
+      }
     }
+  } else {
+    res.status(400).send("400 error ! Email or password empty.");
   }
 });
 
@@ -181,20 +185,21 @@ app.get("/register", (req, res) => {
 
 // Endpoint registers and logs a user in.
 app.post("/register", (req, res) => {
-  if (req.body.email === "" || req.body.password === "" || getUserByEmail(req.body.email)) {
-    res.status(403).send("403 error ! Email or password empty.");
+  if (req.body.email || req.body.password) {
+    if (getUserByEmail(req.body.email)) {
+      res.status(403).send("403 error ! Email already registered.");
+    } else {
+      const userId = generateRandomString(12);
+      users[userId] = {
+        id: userId,
+        email: req.body.email,
+        password: req.body.password
+      };
+      res.cookie('user_id', userId);
+      res.redirect("/urls");
+    }
   } else {
-    const userId = generateRandomString(12);
-    users[userId] = {
-      id: userId,
-      email: req.body.email,
-      password: req.body.password
-    };
-    const templateVars = {
-      user: users[userId]
-    };
-    res.cookie('user_id', userId);
-    res.redirect("/urls");
+    res.status(403).send("403 error ! Email or password is not valid");
   }
 
 });
