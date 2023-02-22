@@ -2,6 +2,9 @@
 var cookieParser = require('cookie-parser');
 const e = require('express');
 
+// Add bcrypt to encrypt our data.
+const bcrypt = require("bcryptjs");
+
 // Initiate our express server
 const express = require("express");
 const app = express();
