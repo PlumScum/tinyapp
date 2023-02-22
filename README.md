@@ -4,8 +4,8 @@ TinyApp is a full stack web application that allows users to shorten long URLs (
 
 ## Current State:
 
-This version of TinyApp displays two stored urls and allows you to search for their long url via their id.
-
-You can now log in and log out!
+You can create and modify tiny URLs
+Can register/login
 
 ## More to come
+User permissions
