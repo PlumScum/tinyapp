@@ -1,4 +1,5 @@
 var cookieParser = require('cookie-parser');
+const e = require('express');
 
 // Initiate our express server
 const express = require("express");
@@ -91,40 +92,64 @@ app.get("/urls", (req, res) => {
 
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
+  if (!req.cookies["user_id"]) {
+    res.status(403).send("You must be logged in to update tiny URL.");
+  } else {
+    let shortURL = generateRandomString(6);
+    urlDatabase[shortURL] = req.body.longURL;
+    res.redirect(`/urls/${shortURL}`);
+  }
 });
 
 // A route to create new urls
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_new", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.redirect('/login');
+  } else {
+    const templateVars = {
+      user: users[req.cookies["user_id"]]
+    };
+    res.render("urls_new", templateVars);
+  }
 });
 
 // Visiting urls with urls/id returns it's longurl and renders it from our urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
-  const templateVars = {
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_show", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.status(403).send("You must be logged in to update tiny URL.");
+  } else {
+    if (!urlDatabase[req.params.id]) {
+      res.status(404).send("URL not found.");
+    } else {
+      const templateVars = {
+        id: req.params.id,
+        longURL: urlDatabase[req.params.id],
+        user: users[req.cookies["user_id"]]
+      };
+      res.render("urls_show", templateVars);
+    }
+  }
 });
 
 // Update longURL in urlDatabase
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.newURL;
-  res.redirect("/urls");
+  if (!req.cookies["user_id"]) {
+    res.status(403).send("You must be logged in to update tiny URL.");
+  } else {
+    urlDatabase[req.params.id] = req.body.newURL;
+    res.redirect("/urls");
+  }
 });
 
 // Delete url from urlDatabase
 app.post("/urls/:id/delete", (req, res) => {
-  // Since we are not sending post data, we are using the req.param.id to get its id
-  delete urlDatabase[req.params.id];
-  res.redirect("/urls");
+  if (!req.cookies["user_id"]) {
+    res.status(403).send("You must be logged in to delete tiny URL.");
+  } else {
+    // Since we are not sending post data, we are using the req.param.id to get its id
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls");
+  }
 });
 
 // Redirect any requests to a URL id to its longURL
