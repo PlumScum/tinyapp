@@ -1,3 +1,4 @@
+/* eslint-disable func-style */
 var cookieParser = require('cookie-parser');
 const e = require('express');
 
@@ -62,6 +63,17 @@ function getUserByEmail(email) {
   return false;
 }
 
+// Helps us easily find a user's URLs
+function urlsForUser(id) {
+  let userURLs = {};
+  for (url in urlDatabase) {
+    if (id === urlDatabase[url].userID) {
+      userURLs[url] = urlDatabase[url].longURL;
+    }
+  }
+  return userURLs;
+}
+
 // Visiting our web server's / will greet with hello
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -89,21 +101,29 @@ app.get("/hello", (req, res) => {
 
 // Displays a table of our ids and urls using our urls_index.ejs template
 app.get("/urls", (req, res) => {
-
-  const templateVars = {
-    user: users[req.cookies["user_id"]],
-    urls: urlDatabase
-  };
-  res.render("urls_index", templateVars);
+  if (!req.cookies["user_id"]) {
+    res.status(403).send("You must be logged in");
+  } else {
+    const templateVars = {
+      user: users[req.cookies["user_id"]],
+      urls: urlsForUser(req.cookies["user_id"])
+    };
+    res.render("urls_index", templateVars);
+    console.log(urlDatabase);
+  }
 });
 
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
-    res.status(403).send("You must be logged in to update tiny URL.");
+    res.status(403).send("You must be logged in to create tiny URL.");
   } else {
     let shortURL = generateRandomString(6);
-    urlDatabase[shortURL] = req.body.longURL;
+    // Add our new tiny URL with userID attached
+    urlDatabase[shortURL] = {
+      longURL : req.body.longURL,
+      userID: req.cookies["user_id"]
+    };
     res.redirect(`/urls/${shortURL}`);
   }
 });
@@ -128,12 +148,16 @@ app.get("/urls/:id", (req, res) => {
     if (!urlDatabase[req.params.id]) {
       res.status(404).send("URL not found.");
     } else {
-      const templateVars = {
-        id: req.params.id,
-        longURL: urlDatabase[req.params.id],
-        user: users[req.cookies["user_id"]]
-      };
-      res.render("urls_show", templateVars);
+      if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+        const templateVars = {
+          id: req.params.id,
+          longURL: urlDatabase[req.params.id].longURL,
+          user: users[req.cookies["user_id"]]
+        };
+        res.render("urls_show", templateVars);
+      } else {
+        res.status(404).send("You do not have permission to view this URL");
+      }
     }
   }
 });
@@ -142,9 +166,15 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.status(403).send("You must be logged in to update tiny URL.");
+  } else if (!urlDatabase[req.params.id]) {
+    res.status(404).send("URL not found.");
   } else {
-    urlDatabase[req.params.id] = req.body.newURL;
-    res.redirect("/urls");
+    if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+      urlDatabase[req.params.id].longURL = req.body.newURL;
+      res.redirect("/urls");
+    } else {
+      res.status(403).send("You do not have permission to update this URL.");
+    }
   }
 });
 
@@ -152,10 +182,15 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.status(403).send("You must be logged in to delete tiny URL.");
+  } else if (!urlDatabase[req.params.id]) {
+    res.status(404).send("URL not found.");
   } else {
-    // Since we are not sending post data, we are using the req.param.id to get its id
-    delete urlDatabase[req.params.id];
-    res.redirect("/urls");
+    if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+      delete urlDatabase[req.params.id];
+      res.redirect("/urls");
+    } else {
+      res.status(403).send("You do not have permission to delete this URL.");
+    }
   }
 });
 
