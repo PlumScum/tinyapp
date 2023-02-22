@@ -235,7 +235,7 @@ app.get("/register", (req, res) => {
 
 // Endpoint registers and logs a user in. Redirect to /urls if successful.
 app.post("/register", (req, res) => {
-  if (req.body.email || req.body.password) {
+  if (req.body.email && req.body.email.length > 0 && req.body.password && req.body.password.length > 0) {
     if (getUserByEmail(req.body.email)) {
       res.status(403).send("403 error ! Email already registered.");
     } else {
