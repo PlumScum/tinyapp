@@ -142,7 +142,7 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-// Update longURL in urlDatabase
+// Update longURL in urlDatabase. User must be logged in and have permission to update. Also checks if the url exists.
 app.post("/urls/:id", (req, res) => {
   if (!req.session.userID) {
     res.status(403).send("You must be logged in to update tiny URL.");
@@ -158,7 +158,7 @@ app.post("/urls/:id", (req, res) => {
   }
 });
 
-// Delete url from urlDatabase
+// Delete url from urlDatabase. User must be logged in and have permission to delete. Also checks if the url exists.
 app.post("/urls/:id/delete", (req, res) => {
   if (!req.session.userID) {
     res.status(403).send("You must be logged in to delete tiny URL.");
@@ -180,7 +180,7 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-// Endpoint for logging in.
+// Endpoint for logging in. Redirects to urls if already signed in.
 app.get("/login", (req, res) => {
   if (req.session.userID) {
     res.redirect('/urls');
@@ -192,18 +192,19 @@ app.get("/login", (req, res) => {
   }
 });
 
-// Endpoint for logging in. Also sets a cookie for user_id
+// Endpoint for logging in. Also sets a cookie for userID
 app.post("/login", (req, res) => {
-  // Are any of our login credentials empty?
+  // Email and password are not empty
   if (req.body.email || req.body.password) {
     const userEmail = req.body.email;
     const userPassword = req.body.password;
-    if (!getUserByEmail(req.body.email)) {
+    if (!getUserByEmail(req.body.email)) { // Email was not found in users database.
       res.status(400).send("400 error ! Error finding user");
-    } else {
+    } else { // User exists and needs to be authenticated.
       const userObject = users[getUserByEmail(req.body.email)];
       if (userEmail === userObject.email && bcrypt.compareSync(userPassword, userObject.password)) {
-        res.cookie('user_id', userObject.id);
+        // User is authenticated, set cookie and redirect to their /urls
+        req.session.userID = userObject.id;
         res.redirect('/urls');
       }
     }
@@ -212,13 +213,15 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Endpoint for logging out.
+// Endpoint for logging out. Redirect to /login
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  // Two cookies are created, so we must clear both to properly log out
+  res.clearCookie('session');
+  res.clearCookie('session.sig');
   res.redirect('/login');
 });
 
-// Endpoint for registration.
+// Endpoint for registration. If already logged in, redirect to urls
 app.get("/register", (req, res) => {
   if (req.session.userID) {
     res.redirect('/urls');
@@ -230,7 +233,7 @@ app.get("/register", (req, res) => {
   }
 });
 
-// Endpoint registers and logs a user in.
+// Endpoint registers and logs a user in. Redirect to /urls if successful.
 app.post("/register", (req, res) => {
   if (req.body.email || req.body.password) {
     if (getUserByEmail(req.body.email)) {
