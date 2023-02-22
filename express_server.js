@@ -89,7 +89,6 @@ app.get("/urls", (req, res) => {
       urls: urlsForUser(req.session.userID)
     };
     res.render("urls_index", templateVars);
-    console.log(urlDatabase);
   }
 });
 
