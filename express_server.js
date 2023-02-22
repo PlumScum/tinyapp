@@ -1,6 +1,4 @@
 /* eslint-disable func-style */
-var cookieParser = require('cookie-parser');
-const e = require('express');
 
 // Add bcrypt to encrypt our data.
 const bcrypt = require("bcryptjs");
@@ -9,6 +7,21 @@ const bcrypt = require("bcryptjs");
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+
+const cookieSession = require('cookie-session');
+app.use(cookieSession({name: 'session', secret: '4inchorangedoorhinge'}));
+
+// Set our render engine
+app.set("view engine", "ejs");
+
+// Convert our requests into a readable string
+app.use(express.urlencoded({ extended: true }));
+
+// Declare our ids with urls
+const urlDatabase = {};
+
+// Our users object
+const users = {};
 
 function generateRandomString(len) {
   let text = "";
@@ -20,21 +33,6 @@ function generateRandomString(len) {
   
   return text;
 }
-
-// Set our render engine
-app.set("view engine", "ejs");
-
-// Convert our requests into a readable string
-app.use(express.urlencoded({ extended: true }));
-
-// Cookie Parser
-app.use(cookieParser());
-
-// Declare our ids with urls
-const urlDatabase = {};
-
-// Our users object
-const users = {};
 
 function getUserByEmail(email) {
   for (usr in users) {
@@ -76,19 +74,19 @@ app.get("/urls.json", (req, res) => {
 app.get("/hello", (req, res) => {
   const templateVars = {
     greeting: "Hello World!",
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.userID]
   };
   res.render("hello_world", templateVars);
 });
 
 // Displays a table of our ids and urls using our urls_index.ejs template
 app.get("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.status(403).send("You must be logged in");
   } else {
     const templateVars = {
-      user: users[req.cookies["user_id"]],
-      urls: urlsForUser(req.cookies["user_id"])
+      user: users[req.session.userID],
+      urls: urlsForUser(req.session.userID)
     };
     res.render("urls_index", templateVars);
     console.log(urlDatabase);
@@ -97,14 +95,14 @@ app.get("/urls", (req, res) => {
 
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.status(403).send("You must be logged in to create tiny URL.");
   } else {
     let shortURL = generateRandomString(6);
     // Add our new tiny URL with userID attached
     urlDatabase[shortURL] = {
       longURL : req.body.longURL,
-      userID: req.cookies["user_id"]
+      userID: req.session.userID
     };
     res.redirect(`/urls/${shortURL}`);
   }
@@ -112,11 +110,11 @@ app.post("/urls", (req, res) => {
 
 // A route to create new urls
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.redirect('/login');
   } else {
     const templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.userID]
     };
     res.render("urls_new", templateVars);
   }
@@ -124,17 +122,17 @@ app.get("/urls/new", (req, res) => {
 
 // Visiting urls with urls/id returns it's longurl and renders it from our urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.status(403).send("You must be logged in to update tiny URL.");
   } else {
     if (!urlDatabase[req.params.id]) {
       res.status(404).send("URL not found.");
     } else {
-      if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+      if (req.session.userID === urlDatabase[req.params.id].userID) {
         const templateVars = {
           id: req.params.id,
           longURL: urlDatabase[req.params.id].longURL,
-          user: users[req.cookies["user_id"]]
+          user: users[req.session.userID]
         };
         res.render("urls_show", templateVars);
       } else {
@@ -146,12 +144,12 @@ app.get("/urls/:id", (req, res) => {
 
 // Update longURL in urlDatabase
 app.post("/urls/:id", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.status(403).send("You must be logged in to update tiny URL.");
   } else if (!urlDatabase[req.params.id]) {
     res.status(404).send("URL not found.");
   } else {
-    if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+    if (req.session.userID === urlDatabase[req.params.id].userID) {
       urlDatabase[req.params.id].longURL = req.body.newURL;
       res.redirect("/urls");
     } else {
@@ -162,12 +160,12 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete url from urlDatabase
 app.post("/urls/:id/delete", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.userID) {
     res.status(403).send("You must be logged in to delete tiny URL.");
   } else if (!urlDatabase[req.params.id]) {
     res.status(404).send("URL not found.");
   } else {
-    if (req.cookies["user_id"] === urlDatabase[req.params.id].userID) {
+    if (req.session.userID === urlDatabase[req.params.id].userID) {
       delete urlDatabase[req.params.id];
       res.redirect("/urls");
     } else {
@@ -184,11 +182,11 @@ app.get("/u/:id", (req, res) => {
 
 // Endpoint for logging in.
 app.get("/login", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.userID) {
     res.redirect('/urls');
   } else {
     const templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.userID]
     };
     res.render("user_login", templateVars);
   }
@@ -222,11 +220,11 @@ app.post("/logout", (req, res) => {
 
 // Endpoint for registration.
 app.get("/register", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.userID) {
     res.redirect('/urls');
   } else {
     const templateVars = {
-      user: users[req.cookies["user_id"]]
+      user: users[req.session.userID]
     };
     res.render("user_registration", templateVars);
   }
@@ -244,7 +242,7 @@ app.post("/register", (req, res) => {
         email: req.body.email,
         password: bcrypt.hashSync(req.body.password, 10)
       };
-      res.cookie('user_id', userId);
+      req.session.userID = userId;
       res.redirect("/urls");
     }
   } else {
