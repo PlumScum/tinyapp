@@ -54,35 +54,36 @@ function urlsForUser(id) {
   return userURLs;
 }
 
-// Visiting our web server's / will greet with hello
-app.get("/", (req, res) => {
-  res.send("Hello!");
-  console.log(getUserByEmail("user@example.com"));
-});
-
 // Log our port to console
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// Our base URL redirects to the login screen
+app.get("/", (req, res) => {
+  if (!req.session.userID) {
+    res.redirect('/login');
+  } else {
+    const templateVars = {
+      user: users[req.session.userID],
+      urls: urlsForUser(req.session.userID)
+    };
+    res.render("urls_index", templateVars);
+  }
+});
+
 
 // urls.json returns a json object from our urlDatabase object
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// We use ejs to render our hello_world.ejs template and greet the viewer
-app.get("/hello", (req, res) => {
-  const templateVars = {
-    greeting: "Hello World!",
-    user: users[req.session.userID]
-  };
-  res.render("hello_world", templateVars);
-});
 
 // Displays a table of our ids and urls using our urls_index.ejs template
 app.get("/urls", (req, res) => {
+  console.log(urlDatabase);
   if (!req.session.userID) {
-    res.status(403).send("You must be logged in");
+    res.redirect('/login');
   } else {
     const templateVars = {
       user: users[req.session.userID],
@@ -95,7 +96,7 @@ app.get("/urls", (req, res) => {
 // Accept post data on our urls endpoint
 app.post("/urls", (req, res) => {
   if (!req.session.userID) {
-    res.status(403).send("You must be logged in to create tiny URL.");
+    res.redirect('/login');
   } else {
     let shortURL = generateRandomString(6);
     // Add our new tiny URL with userID attached
@@ -122,7 +123,7 @@ app.get("/urls/new", (req, res) => {
 // Visiting urls with urls/id returns it's longurl and renders it from our urls_show.ejs template
 app.get("/urls/:id", (req, res) => {
   if (!req.session.userID) {
-    res.status(403).send("You must be logged in to update tiny URL.");
+    res.redirect('/login');
   } else {
     if (!urlDatabase[req.params.id]) {
       res.status(404).send("URL not found.");
@@ -144,7 +145,7 @@ app.get("/urls/:id", (req, res) => {
 // Update longURL in urlDatabase. User must be logged in and have permission to update. Also checks if the url exists.
 app.post("/urls/:id", (req, res) => {
   if (!req.session.userID) {
-    res.status(403).send("You must be logged in to update tiny URL.");
+    res.redirect('/login');
   } else if (!urlDatabase[req.params.id]) {
     res.status(404).send("URL not found.");
   } else {
@@ -160,7 +161,7 @@ app.post("/urls/:id", (req, res) => {
 // Delete url from urlDatabase. User must be logged in and have permission to delete. Also checks if the url exists.
 app.post("/urls/:id/delete", (req, res) => {
   if (!req.session.userID) {
-    res.status(403).send("You must be logged in to delete tiny URL.");
+    res.redirect('/login');
   } else if (!urlDatabase[req.params.id]) {
     res.status(404).send("URL not found.");
   } else {
@@ -175,7 +176,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // Redirect any requests to a URL id to its longURL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const longURL = urlDatabase[req.params.id].longURL;
   res.redirect(longURL);
 });
 
