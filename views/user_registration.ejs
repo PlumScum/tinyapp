@@ -22,19 +22,12 @@
     <%- include('partials/_header') %>
 
     <main style="margin: 1em;">
-      <h3>Create TinyURL</h3>
-      <form class="form-inline" action="/urls" method="POST">
-        <div class="form-group mb-2">
-          <label for="longURL">Enter a URL:</label>
-          <input
-            class="form-control"
-            type="text"
-            name="longURL"
-            placeholder="http://"
-            style="width: 300px; margin: 1em"
-          />
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
+      <h3>Register User</h3>
+        <form class="form-inline" method="POST" action="/register">
+          Email: <input type="email" name="email">
+          Password: <input type="password" name="password">
+          <button type="submit">Register</button>
+        </form>
       </form>
     </main>
     <!-- Bootstrap JS -->
