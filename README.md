@@ -19,4 +19,4 @@ TinyApp is a full stack web application that allows users to shorten long URLs (
 ## Getting Started
 
 - Install dependencies (using the command 'npm install').
-- Run the development web server using the command 'node express_server.js'.
+- Run the development web server using the command 'npm start'.
