@@ -4,7 +4,8 @@ TinyApp is a full stack web application that allows users to shorten long URLs (
 
 ## Completed Project:
 
-!["Screenshot of the URLs page"](/tinyapp/TinyAppURLShot.png)
+!["Screenshot of the URLs page"](https://raw.githubusercontent.com/PlumScum/tinyapp/main/docs/TinyApp%20Example.png)
+!["TinyApp Example"](https://raw.githubusercontent.com/PlumScum/tinyapp/main/docs/TinyAppURLShot.png)
 
 ## Dependencies
 
